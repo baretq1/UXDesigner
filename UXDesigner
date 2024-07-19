@@ -1,0 +1,51 @@
+UXDesigner
+# UXDesigner.py
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Data Processing
+def load_data(file_path):
+    return pd.read_csv(file_path)
+
+def preprocess_data(df):
+    df.fillna(df.mean(), inplace=True)
+    return df
+
+# Data Visualization
+def plot_data(df, x, y):
+    plt.figure(figsize=(10, 6))
+    plt.plot(df[x], df[y])
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.title(f'{y} vs {x}')
+    plt.savefig('plot.png')
+
+# Flask Routes
+@app.route('/load', methods=['POST'])
+def load():
+    file_path = request.json['file_path']
+    df = load_data(file_path)
+    return df.to_json()
+
+@app.route('/preprocess', methods=['POST'])
+def preprocess():
+    data = request.json['data']
+    df = pd.read_json(data)
+    df = preprocess_data(df)
+    return df.to_json()
+
+@app.route('/plot', methods=['POST'])
+def plot():
+    data = request.json['data']
+    x = request.json['x']
+    y = request.json['y']
+    df = pd.read_json(data)
+    plot_data(df, x, y)
+    return 'Plot generated and saved as plot.png'
+
+if __name__ == "__main__":
+    app.run(debug=True)
